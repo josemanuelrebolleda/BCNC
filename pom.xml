@@ -5,8 +5,8 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.2.2</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<version>3.2.3</version>
+		<relativePath/>
 	</parent>
 	<groupId>com.BCNC</groupId>
 	<artifactId>TestBCNC</artifactId>
@@ -15,6 +15,8 @@
 	<description>Test project for BCNC</description>
 	<properties>
 		<java.version>17</java.version>
+		<sonar.host.url>http://localhost:9000</sonar.host.url>
+		<sonar.login>eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJvcmdhbml6YXRpb24iOiIzWGFMNSIsInByb2plY3QiOiJBR0pHaiIsInRva2VuIjoiM2puS2oifQ.4Od-qQT37WL9tH9TXjYQ3Y_syoFaQnE_3kgnYmXFPNw</sonar.login>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -39,9 +41,16 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
+			<version>3.2.3</version>
 			<scope>test</scope>
 		</dependency>
-	</dependencies>
+			<dependency>
+				<groupId>org.junit.jupiter</groupId>
+				<artifactId>junit-jupiter</artifactId>
+				<version>5.7.2</version>
+				<scope>test</scope>
+			</dependency>
+		</dependencies>
 
 	<build>
 		<plugins>
@@ -56,6 +65,11 @@
 						</exclude>
 					</excludes>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.sonarsource.scanner.maven</groupId>
+				<artifactId>sonar-maven-plugin</artifactId>
+				<version>3.9.0.2155</version>
 			</plugin>
 		</plugins>
 	</build>
