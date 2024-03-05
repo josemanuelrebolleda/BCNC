@@ -1,13 +1,18 @@
 package com.BCNC.Test.service;
 
 import com.BCNC.Test.entity.Album;
+import com.BCNC.Test.model.AlbumDTO;
+import org.springframework.http.ResponseEntity;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public interface AlbumService {
-    public ArrayList<Album> getAllAlbums();
-    public void enrichAndSaveAlbums();
-    public ArrayList<Album> enriching();
+    ResponseEntity<List<Album>> getAlbumsFromDB();
+    ResponseEntity<String> enrichAlbums();
+    ResponseEntity<List<Album>> enrichAndSave();
+    public List<Album> enriching();
+
 
 
 }

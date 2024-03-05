@@ -12,6 +12,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,41 +39,17 @@ public class AlbumController {
 
     @PostMapping("/enrichAndSave")
     public ResponseEntity<String> enrichAndSaveAlbums() {
-        try {
-            albumRepository.saveAll(albumServiceImpl.enriching());
-            return ResponseEntity.status(HttpStatus.OK).body("Almacenado en BDD");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error recuperando datos");
-        }
+        return albumServiceImpl.enrichAndSaveAlbums();
     }
 
-    @GetMapping("/enrich")
+    @GetMapping("/enrichAlbums")
     public ResponseEntity<String> enrichAlbums() {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            try {
-                //Convertimos en JSON para poder responder en String y aclarar el posible error de procesamiento del catch
-                return new ResponseEntity<>(objectMapper.writeValueAsString(albumServiceImpl.enriching()), HttpStatus.OK);
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-                return new ResponseEntity<>("Error al convertir a JSON", HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error recuperando datos");
-        }
+        return albumServiceImpl.enrichAlbums();
     }
 
     @GetMapping("/getAlbumsFromDB")
-    public ResponseEntity<List<Album>> getAllAlbumsFromDb() {
-        List<Album> albums = albumRepository.findAll();
-        if (!albums.isEmpty()){
-            return ResponseEntity.ok().body(albums);
-        } else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(albums);
-
-        }
+    public ResponseEntity<List<Album>> getAlbumsFromDB() {
+        return albumServiceImpl.getAlbumsFromDB();
     }
 
 }
