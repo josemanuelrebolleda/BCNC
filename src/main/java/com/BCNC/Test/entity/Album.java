@@ -23,9 +23,9 @@ public class Album {
     @JoinColumn(name = "album_id")
     private List<Photo> photos;
 
-    public Album(Long id, String title) {
-        this.id = id;
-        this.title = title;
-        this.photos = new ArrayList<>();
+    public Album(Album album) {
+        this.id = album.id;
+        this.title = album.title;
+        this.photos = album.photos;
     }
 }

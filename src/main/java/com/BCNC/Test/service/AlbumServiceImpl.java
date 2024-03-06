@@ -87,13 +87,9 @@ public class AlbumServiceImpl implements AlbumService{
 
     }
 
-    @Override
-    public ResponseEntity<List<Album>> enrichAndSave() {
-        return null;
-    }
 
     public List<Album> enriching() {
-        List<Album> albumsEnriched = new ArrayList<>();
+        List<Album> albumsEnriched;
         try {
             albumsEnriched = loadAlbums();
         } catch (Exception e) {
