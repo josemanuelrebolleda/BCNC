@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public interface AlbumService {
-    ResponseEntity<List<Album>> getAlbumsFromDB();
-    ResponseEntity<String> enrichAlbums();
-    ResponseEntity<String> enrichAndSaveAlbums();
+    public ResponseEntity<String> getAlbumsFromDB();
+    public ResponseEntity<String> enrichAlbums();
+    public ResponseEntity<String> enrichAndSaveAlbums();
     public List<Album> enriching();
 
 

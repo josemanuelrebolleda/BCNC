@@ -2,11 +2,13 @@ package com.BCNC.Test.service;
 
 import com.BCNC.Test.entity.Album;
 import com.BCNC.Test.entity.Photo;
+import com.BCNC.Test.exception.*;
 import com.BCNC.Test.mapper.AlbumMapper;
 import com.BCNC.Test.mapper.PhotoMapper;
 import com.BCNC.Test.model.AlbumDTO;
 import com.BCNC.Test.model.PhotoDTO;
 import com.BCNC.Test.repository.AlbumRepository;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -44,26 +46,36 @@ public class AlbumServiceImpl implements AlbumService{
     PhotoMapper photoMapper;
     @Autowired
     AlbumRepository albumRepository;
+    @Autowired
+    private RestTemplate restTemplate;
+
 
     public ResponseEntity<String> enrichAndSaveAlbums(){
         try {
             List<Album> enrichedAlbums = enriching();
-            albumRepository.saveAll(enrichedAlbums);
-            return ResponseEntity.status(HttpStatus.OK).body("Almacenado en BDD");
+            if (!enrichedAlbums.isEmpty()) {
+                albumRepository.saveAll(enrichedAlbums);
+                return ResponseEntity.status(HttpStatus.OK).body("Almacenado en BDD");
+            }
         } catch (Exception e) {
-            logger.error("Error recuperando datos", e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error recuperando datos");
+            throw new EnrichAndSaveAlbumsException("Error enriqueciendo y guardando álbumes", e);
         }
+        throw new EnrichAndSaveAlbumsException("Error recuperando datos", null);
     }
-
     @Override
-    public ResponseEntity<List<Album>> getAlbumsFromDB() {
-        //JMRD Devolver String?
+    public ResponseEntity<String> getAlbumsFromDB() {
+        ObjectMapper objectMapper = new ObjectMapper();
         try {
             List<Album> albums = albumRepository.findAll();
-            return new ResponseEntity<>(albums, HttpStatus.OK);
+
+            //Convertimos en JSON para poder responder en String y aclarar el posible error de procesamiento del catch
+            String jsonResponse = objectMapper.writeValueAsString(albums);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            return new ResponseEntity<>(jsonResponse, headers, HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new GetAlbumsFromDBException("Error al obtener álbumes de la base de datos", e);
         }
     }
     @Override
@@ -71,66 +83,57 @@ public class AlbumServiceImpl implements AlbumService{
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             try {
-                //Convertimos en JSON para poder responder en String y aclarar el posible error de procesamiento del catch
                 String jsonResponse = objectMapper.writeValueAsString(enriching());
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
                 return new ResponseEntity<>(jsonResponse, headers, HttpStatus.OK);
             } catch (JsonProcessingException e) {
-                logger.error("Error al convertir a JSON", e);
-                return new ResponseEntity<>("Error al convertir a JSON", HttpStatus.INTERNAL_SERVER_ERROR);
+                throw new EnrichAlbumsException("Error al convertir a JSON", e);
             }
 
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error recuperando datos");
+            throw new EnrichAlbumsException("Error recuperando datos", e);
         }
-
     }
-
 
     public List<Album> enriching() {
         List<Album> albumsEnriched;
         try {
             albumsEnriched = loadAlbums();
         } catch (Exception e) {
-            logger.error("Error cargando albums de repositorio", e);
-            throw new RuntimeException(e);
+            throw new EnrichingAlbumsException("Error cargando albums de repositorio", e);
         }
 
-        albumsEnriched.forEach(album -> {
-            List<Photo> photos;
-            try {
-                photos = photoServiceImpl.loadPhotos();
-            } catch (Exception e) {
-                logger.error("Error cargando photos de repositorio", e);
-                throw new RuntimeException(e);
-            }
-            List<Photo> photosWithAlbumId = photos.stream()
-                    .filter(photo -> Objects.equals(photo.getAlbumId(), album.getId()))
-                    .collect(Collectors.toList());
-            album.setPhotos(photosWithAlbumId);
-        });
+        if (!albumsEnriched.isEmpty()) {
+            albumsEnriched.forEach(album -> {
+                List<Photo> photos;
+                try {
+                    photos = photoServiceImpl.loadPhotos();
+                } catch (Exception e) {
+                    throw new EnrichingAlbumsException("Error cargando photos de repositorio", e);
+                }
+                List<Photo> photosWithAlbumId = photos.stream()
+                        .filter(photo -> Objects.equals(photo.getAlbumId(), album.getId()))
+                        .collect(Collectors.toList());
+                album.setPhotos(photosWithAlbumId);
+            });
+        }
 
         return albumsEnriched;
-    }    public List<Album> loadAlbums() {
-        RestTemplate restTemplate = new RestTemplate();
+    }
+    public List<Album> loadAlbums() {
         AlbumDTO[] albumArray = null;
         try {
             albumArray = restTemplate.getForObject(ALBUMS_URL, AlbumDTO[].class);
         } catch (RestClientException e) {
             logger.error("Error cargando albums de repositorio", e);
-            throw new RuntimeException("Error cargando albums de repositorio", e);
+            throw new AlbumNotFoundException("Error cargando albums de repositorio", e);
         }
 
         if (albumArray == null) {
-            throw new RuntimeException("La API devolvió datos nulos");
+            throw new AlbumNotFoundException("La API devolvió datos nulos");
         }
 
-        List<AlbumDTO> albums = Arrays.asList(albumArray);
-        return mapToAlbums(albums);
-    }
-
-    private List<Album> mapToAlbums(List<AlbumDTO> albumDTOs) {
-        return albumMapper.mapToAlbums(albumDTOs);
+        return albumMapper.mapToAlbums(Arrays.asList(albumArray));
     }
 }

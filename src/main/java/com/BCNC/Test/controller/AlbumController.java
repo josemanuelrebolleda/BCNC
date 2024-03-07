@@ -48,7 +48,7 @@ public class AlbumController {
     }
 
     @GetMapping("/getAlbumsFromDB")
-    public ResponseEntity<List<Album>> getAlbumsFromDB() {
+    public ResponseEntity<String> getAlbumsFromDB() {
         return albumServiceImpl.getAlbumsFromDB();
     }
 

@@ -57,19 +57,21 @@ public class AlbumServiceImplTest {
     }
 
     @Test
-    public void testGetAlbumsFromDBOk() {
+    public void testGetAlbumsFromDBOk() throws JsonProcessingException {
         when(albumRepository.findAll()).thenReturn(albums);
 
-        ResponseEntity<List<Album>> response = albumService.getAlbumsFromDB();
+        ResponseEntity<String> response = albumService.getAlbumsFromDB();
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(albums, response.getBody());
-    }
 
+        ObjectMapper objectMapper = new ObjectMapper();
+        String expectedBody = objectMapper.writeValueAsString(albums);
+        assertEquals(expectedBody, response.getBody());
+    }
     @Test
     public void testGetAlbumsFromDBKo() {
         when(albumRepository.findAll()).thenThrow(new RuntimeException());
 
-        ResponseEntity<List<Album>> response = albumService.getAlbumsFromDB();
+        ResponseEntity<String> response = albumService.getAlbumsFromDB();
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
     @Test
