@@ -9,6 +9,7 @@ import com.BCNC.Test.model.AlbumDTO;
 import com.BCNC.Test.model.PhotoDTO;
 import com.BCNC.Test.repository.AlbumRepository;
 
+import com.BCNC.Test.service.strategy.EnrichingStrategy;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -48,6 +49,9 @@ public class AlbumServiceImpl implements AlbumService{
     AlbumRepository albumRepository;
     @Autowired
     private RestTemplate restTemplate;
+    @Autowired
+    private EnrichingStrategy enrichingStrategy;
+
 
 
     public ResponseEntity<String> enrichAndSaveAlbums(){
@@ -97,30 +101,9 @@ public class AlbumServiceImpl implements AlbumService{
     }
 
     public List<Album> enriching() {
-        List<Album> albumsEnriched;
-        try {
-            albumsEnriched = loadAlbums();
-        } catch (Exception e) {
-            throw new EnrichingAlbumsException("Error cargando albums de repositorio", e);
-        }
-
-        if (!albumsEnriched.isEmpty()) {
-            albumsEnriched.forEach(album -> {
-                List<Photo> photos;
-                try {
-                    photos = photoServiceImpl.loadPhotos();
-                } catch (Exception e) {
-                    throw new EnrichingAlbumsException("Error cargando photos de repositorio", e);
-                }
-                List<Photo> photosWithAlbumId = photos.stream()
-                        .filter(photo -> Objects.equals(photo.getAlbumId(), album.getId()))
-                        .collect(Collectors.toList());
-                album.setPhotos(photosWithAlbumId);
-            });
-        }
-
-        return albumsEnriched;
+        return enrichingStrategy.enrich();
     }
+
     public List<Album> loadAlbums() {
         AlbumDTO[] albumArray = null;
         try {

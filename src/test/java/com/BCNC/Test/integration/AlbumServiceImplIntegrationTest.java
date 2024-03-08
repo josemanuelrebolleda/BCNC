@@ -4,6 +4,7 @@ import com.BCNC.Test.entity.Album;
 import com.BCNC.Test.entity.Photo;
 import com.BCNC.Test.repository.AlbumRepository;
 import com.BCNC.Test.service.AlbumServiceImpl;
+import com.BCNC.Test.service.strategy.EnrichingStrategy;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +42,7 @@ public class AlbumServiceImplIntegrationTest {
     private static final List<Photo> photos = new ArrayList<>();
 
     @BeforeEach
-    public void generateEnrichedAlbum() {
+    public void integrationGenerateEnrichedAlbum() {
         // Crear dos objetos Photo
         Photo photo1 = new Photo();
         photo1.setId(1L);
@@ -77,13 +78,17 @@ public class AlbumServiceImplIntegrationTest {
     }
 
     @Test
-    public void testEnrichAndSaveAlbumsOk() {
-        AlbumServiceImpl albumServiceMock = mock(AlbumServiceImpl.class);
+    public void integrationTestEnrichAndSaveAlbumsOk() {
+        // Crear una estrategia de enriquecimiento que devuelva los álbumes enriquecidos
+        EnrichingStrategy integrationTestEnrichingStrategy = new TestEnrichingStrategy(albumsEnriched);
 
-        when(albumServiceMock.enriching()).thenReturn(albumsEnriched);
-        ReflectionTestUtils.setField(albumService, "albumService", albumServiceMock);
+        // Inyectar la estrategia de enriquecimiento en el servicio
+        ReflectionTestUtils.setField(albumService, "enrichingStrategy", integrationTestEnrichingStrategy);
 
-        ResponseEntity<String> response = restTemplate.postForEntity("/albums/enrichAndSave", null, String.class);
+        // Mockear el método saveAll() del repositorio para que devuelva los álbumes enriquecidos
+        when(albumRepository.saveAll(any())).thenReturn(albumsEnriched);
+
+        ResponseEntity<String> response = albumService.enrichAndSaveAlbums();
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Almacenado en BDD", response.getBody());
 
@@ -101,7 +106,7 @@ public class AlbumServiceImplIntegrationTest {
         assertEquals(expectedBody, getResponse.getBody());
     }
     @Test
-    public void testGetAlbumsFromDBOk() throws JsonProcessingException {
+    public void integrationTestGetAlbumsFromDBOk() throws JsonProcessingException {
         ResponseEntity<String> response = restTemplate.getForEntity("/albums/getAlbumsFromDB", String.class);
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
@@ -111,7 +116,7 @@ public class AlbumServiceImplIntegrationTest {
     }
 
 //    @Test
-//    public void testEnrichAlbumsOk() throws JsonProcessingException {
+//    public void integrationTestEnrichAlbumsOk() throws JsonProcessingException {
 //        ResponseEntity<String> response = restTemplate.getForEntity("/albums/enrichAlbums", String.class);
 //        assertEquals(HttpStatus.OK, response.getStatusCode());
 //
@@ -121,7 +126,7 @@ public class AlbumServiceImplIntegrationTest {
 //    }
 
     @Test
-    public void testEnriching() {
+    public void integrationTestEnriching() {
         ResponseEntity<Album[]> response = restTemplate.getForEntity("/albums/enriching", Album[].class);
         List<Album> result = Arrays.asList(response.getBody());
 
@@ -130,7 +135,7 @@ public class AlbumServiceImplIntegrationTest {
 
     // Creamos un album para pruebas previamente
     @Test
-    public void testEnrichAndSaveAlbumsThrowsException() {
+    public void integrationTestEnrichAndSaveAlbumsThrowsException() {
         // Configurar el comportamiento del servicio para que lance una excepción
         doThrow(new RuntimeException()).when(albumService).enrichAndSaveAlbums();
 
@@ -139,7 +144,7 @@ public class AlbumServiceImplIntegrationTest {
     }
 
     @Test
-    public void testGetAlbumsFromDBThrowsException() {
+    public void integrationTestGetAlbumsFromDBThrowsException() {
         // Configurar el comportamiento del servicio para que lance una excepción
         doThrow(new RuntimeException()).when(albumService).getAlbumsFromDB();
 
@@ -148,7 +153,7 @@ public class AlbumServiceImplIntegrationTest {
     }
 
     @Test
-    public void testEnrichAlbumsThrowsException() {
+    public void integrationTestEnrichAlbumsThrowsException() {
         // Configurar el comportamiento del servicio para que lance una excepción
         doThrow(new RuntimeException()).when(albumService).enrichAlbums();
 
@@ -157,7 +162,7 @@ public class AlbumServiceImplIntegrationTest {
     }
 
     @Test
-    public void testEnrichingThrowsException() {
+    public void integrationTestEnrichingThrowsException() {
         // Configurar el comportamiento del servicio para que lance una excepción
         doThrow(new RuntimeException()).when(albumService).enriching();
 
