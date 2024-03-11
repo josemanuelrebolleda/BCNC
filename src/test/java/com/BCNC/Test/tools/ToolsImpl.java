@@ -12,7 +12,7 @@ import java.util.List;
 
 
 @Component
-public class ToolsImpl {
+public class ToolsImpl implements Tools{
     @Autowired
     private AlbumRepository albumRepository;
     public List<Album> setup() {

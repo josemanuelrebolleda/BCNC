@@ -1,37 +1,27 @@
 package com.BCNC.Test.service;
 
 import com.BCNC.Test.entity.Album;
-import com.BCNC.Test.entity.Photo;
-import com.BCNC.Test.exception.*;
+import com.BCNC.Test.exception.EnrichAlbumsException;
+import com.BCNC.Test.exception.EnrichAndSaveAlbumsException;
+import com.BCNC.Test.exception.GetAlbumsFromDBException;
 import com.BCNC.Test.mapper.AlbumMapper;
 import com.BCNC.Test.mapper.PhotoMapper;
-import com.BCNC.Test.model.AlbumDTO;
-import com.BCNC.Test.model.PhotoDTO;
 import com.BCNC.Test.repository.AlbumRepository;
-
 import com.BCNC.Test.service.strategy.EnrichingStrategy;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.Data;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 @Data

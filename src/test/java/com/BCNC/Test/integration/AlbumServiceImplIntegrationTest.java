@@ -63,14 +63,14 @@ public class AlbumServiceImplIntegrationTest {
     }
 
     @Test
-    public void integrationTestEnrichAndSaveAlbumsKOEmptyList() {
+    public void integrationTestEnrichAndSaveAlbumsKoEmptyList() {
         when(enrichingStrategyMock.enrich()).thenReturn(Collections.emptyList());
 
         assertThrows(EnrichAndSaveAlbumsException.class, () -> albumServiceImpl.enrichAndSaveAlbums());
         verify(albumRepositoryMock, times(1)).saveAll(anyList());
     }
     @Test
-    public void integrationTestEnrichAndSaveAlbumsKOException() {
+    public void integrationTestEnrichAndSaveAlbumsKoException() {
         when(enrichingStrategyMock.enrich()).thenThrow(EnrichAndSaveAlbumsException.class);
 
         assertThrows(EnrichAndSaveAlbumsException.class, () -> albumServiceImpl.enrichAndSaveAlbums());
@@ -88,7 +88,7 @@ public class AlbumServiceImplIntegrationTest {
         assertTrue(Objects.requireNonNull(response.getBody()).contains(album1Json));
     }
     @Test
-    public void integrationTestGetAlbumsFromDBGetAlbumsFromDBKO() {
+    public void integrationTestGetAlbumsFromDBGetAlbumsFromDBKo() {
         when(albumRepositoryMock.findAll()).thenThrow(GetAlbumsFromDBException.class);
 
         assertThrows(GetAlbumsFromDBException.class, () -> albumServiceImpl.getAlbumsFromDB());
@@ -106,7 +106,7 @@ public class AlbumServiceImplIntegrationTest {
     }
 
     @Test
-    public void integrationTestEnrichAlbumsKO() {
+    public void integrationTestEnrichAlbumsKo() {
         when(enrichingStrategyMock.enrich()).thenThrow(EnrichAlbumsException.class);
 
         assertThrows(EnrichAlbumsException.class, () -> albumServiceImpl.enrichAlbums());

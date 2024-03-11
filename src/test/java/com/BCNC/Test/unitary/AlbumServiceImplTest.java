@@ -2,11 +2,15 @@ package com.BCNC.Test.unitary;
 
 import com.BCNC.Test.entity.Album;
 import com.BCNC.Test.entity.Photo;
+import com.BCNC.Test.exception.EnrichAndSaveAlbumsException;
+import com.BCNC.Test.exception.EnrichAlbumsException;
 import com.BCNC.Test.integration.TestEnrichingStrategy;
 import com.BCNC.Test.repository.AlbumRepository;
 import com.BCNC.Test.service.AlbumServiceImpl;
 import com.BCNC.Test.service.PhotoServiceImpl;
 import com.BCNC.Test.service.strategy.EnrichingStrategy;
+import com.BCNC.Test.service.strategy.EnrichingStrategyImpl;
+import com.BCNC.Test.tools.ToolsImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,25 +19,29 @@ import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-
+import org.mockito.Mockito;
 @SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class AlbumServiceImplTest {
     @Autowired
-    private AlbumServiceImpl albumService;
-
+    private AlbumServiceImpl albumServiceImpl;
+    @Autowired
+    private ToolsImpl tools;
     @MockBean
-    private AlbumRepository albumRepository;
+    private AlbumRepository albumRepositoryMock;
 
     @MockBean
     private PhotoServiceImpl photoService;
@@ -41,6 +49,8 @@ public class AlbumServiceImplTest {
     @Mock
     private AlbumServiceImpl albumServiceMock;
 
+    @MockBean
+    EnrichingStrategyImpl enrichingStrategyMock;
 
     //Listas para usar en pruebas
     private static final List<Album> albums = new ArrayList<>();
@@ -49,63 +59,40 @@ public class AlbumServiceImplTest {
 
 
     @BeforeEach
-    public void generateEnrichedAlbum() {
-        // Crear dos objetos Photo
-        Photo photo1 = new Photo();
-        photo1.setId(1L);
-        photo1.setTitle("Título de la Foto 1");
-        photo1.setUrl("URL de la Foto 1");
-
-        Photo photo2 = new Photo();
-        photo2.setId(2L);
-        photo2.setTitle("Título de la Foto 2");
-        photo2.setUrl("URL de la Foto 2");
-
-        // Añadimos los objetos Photo a la lista photos
-        photos.add(photo1);
-        photos.add(photo2);
-
-        // Creamos un objeto Album y establecer su lista de Photo a la lista photos
-        Album album = new Album();
-        album.setId(1L);
-        album.setTitle("Título del Álbum");
-
-        // Establecemos el albumId en los objetos Photo
-        photo1.setAlbumId(album.getId());
-        photo2.setAlbumId(album.getId());
-
-
-        albums.add(album);
-
-        // Añadimos el objeto Album a la lista albums
-        enrichedAlbums.add(new Album(album));
-        enrichedAlbums.get(0).setPhotos(photos);
-        albumRepository.deleteAll();
-        albumRepository.saveAll(enrichedAlbums);
-
+    public void setup() {
+        Mockito.reset(enrichingStrategyMock, albumRepositoryMock);
+        enrichedAlbums.addAll(tools.setup());
     }
     @Test
     public void testEnrichAndSaveAlbumsOk() {
-        when(albumRepository.saveAll(any())).thenReturn(albums);
+        when(enrichingStrategyMock.enrich()).thenReturn(enrichedAlbums);
+        when(albumRepositoryMock.saveAll(any())).thenReturn(enrichedAlbums);
 
-        ResponseEntity<String> response = albumService.enrichAndSaveAlbums();
+        ResponseEntity<String> response = albumServiceImpl.enrichAndSaveAlbums();
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Almacenado en BDD", response.getBody());
     }
     @Test
-    public void testEnrichAndSaveAlbumsKo() {
-        when(albumRepository.saveAll(any())).thenThrow(new RuntimeException());
+    public void testEnrichAndSaveAlbumsKoEmptyList() {
+        // Hacer que el método enriching() devuelva una lista vacía cuando se llame
+        when(enrichingStrategyMock.enrich()).thenReturn(new ArrayList<>());
 
-        ResponseEntity<String> response = albumService.enrichAndSaveAlbums();
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Error recuperando datos", response.getBody());
+        // Llamar al método enrichAndSaveAlbums() y verificar que lanza una excepción EnrichAndSaveAlbumsException
+        assertThrows(EnrichAndSaveAlbumsException.class, () -> albumServiceImpl.enrichAndSaveAlbums());
     }
+    @Test
+    public void testEnrichAndSaveAlbumsKoException() {
+        // Hacer que el método enrich() lance una excepción cuando se llame
+        when(enrichingStrategyMock.enrich()).thenThrow(EnrichAndSaveAlbumsException.class);
 
+        // Llamar al método enrichAndSaveAlbums() y verificar que lanza una excepción EnrichAndSaveAlbumsException
+        assertThrows(EnrichAndSaveAlbumsException.class, () -> albumServiceImpl.enrichAndSaveAlbums());
+    }
     @Test
     public void testGetAlbumsFromDBOk() throws JsonProcessingException {
-        when(albumRepository.findAll()).thenReturn(albums);
+        when(albumRepositoryMock.findAll()).thenReturn(albums);
 
-        ResponseEntity<String> response = albumService.getAlbumsFromDB();
+        ResponseEntity<String> response = albumServiceImpl.getAlbumsFromDB();
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
         ObjectMapper objectMapper = new ObjectMapper();
@@ -114,10 +101,10 @@ public class AlbumServiceImplTest {
     }
     @Test
     public void testGetAlbumsFromDBKo() {
-        when(albumRepository.findAll()).thenThrow(new RuntimeException());
+        when(albumRepositoryMock.findAll()).thenThrow(new RuntimeException());
 
-        ResponseEntity<String> response = albumService.getAlbumsFromDB();
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        Exception exception = assertThrows(RuntimeException.class, () -> albumServiceImpl.getAlbumsFromDB());
+        assertNotNull(exception);
     }
     @Test
     public void testEnrichAlbumsOk() throws JsonProcessingException {
@@ -125,47 +112,44 @@ public class AlbumServiceImplTest {
         EnrichingStrategy testEnrichingStrategy = new TestEnrichingStrategy(enrichedAlbums);
 
         // Inyectar la estrategia de enriquecimiento en el servicio
-        ReflectionTestUtils.setField(albumServiceMock, "enrichingStrategy", testEnrichingStrategy);
-
-        // Llamar al método enriching() y verificar que devuelve enrichedAlbums
-        when(albumServiceMock.enriching()).thenReturn(enrichedAlbums);
-        List<Album> PRUEBA = albumServiceMock.enriching();
-        assertEquals(enrichedAlbums, albumServiceMock.enriching());
+        ReflectionTestUtils.setField(albumServiceImpl, "enrichingStrategy", testEnrichingStrategy);
 
         // Crear una respuesta esperada
         ObjectMapper objectMapper = new ObjectMapper();
         String expectedBody = objectMapper.writeValueAsString(enrichedAlbums);
-        ResponseEntity<String> expectedResponse = new ResponseEntity<>(expectedBody, HttpStatus.OK);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        ResponseEntity<String> expectedResponse = new ResponseEntity<>(expectedBody, headers, HttpStatus.OK);
 
-        // Mockear el método enriching() del servicio para que devuelva los álbumes enriquecidos
-        when(albumServiceMock.enriching()).thenReturn(enrichedAlbums);
-
-        ResponseEntity<String> response = albumServiceMock.enrichAlbums();
-        if (response != null) {
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-
-            expectedBody = objectMapper.writeValueAsString(enrichedAlbums);
-            assertEquals(expectedBody, response.getBody());
-        } else {
-            fail("Response es null");
-        }
+        // Llamar al método enrichAlbums() y verificar que devuelve una respuesta con el estado HTTP 200 OK
+        // y el cuerpo de la respuesta como la cadena JSON de los álbumes enriquecidos
+        ResponseEntity<String> response = albumServiceImpl.enrichAlbums();
+        assertEquals(expectedResponse, response);
     }
     @Test
     public void testEnrichAlbumsKo() {
-        when(photoService.loadPhotos()).thenThrow(new RuntimeException());
+        // Hacer que el método enrich() lance una excepción cuando se llame
+        when(enrichingStrategyMock.enrich()).thenThrow(EnrichAlbumsException.class);
 
-        ResponseEntity<String> response = albumService.enrichAlbums();
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        // Llamar al método enrichAlbums() y verificar que lanza una excepción EnrichAlbumsException
+        assertThrows(EnrichAlbumsException.class, () -> albumServiceImpl.enrichAlbums());
     }
+//        // Hacer que el método enrich() lance una excepción cuando se llame
+//        when(enrichingStrategyMock.enrich()).thenThrow(EnrichAlbumsException.class);
+//
+//        // Llamar al método enrichAlbums() y verificar que devuelve una respuesta con el estado HTTP 400 BAD REQUEST
+//        ResponseEntity<String> response = albumServiceImpl.enrichAlbums();
+//        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+//    }
     @Test
     public void testEnriching() {
         EnrichingStrategy testEnrichingStrategy = new TestEnrichingStrategy(enrichedAlbums);
 
         // Inyectar la estrategia de enriquecimiento en el servicio
-        ReflectionTestUtils.setField(albumService, "enrichingStrategy", testEnrichingStrategy);
+        ReflectionTestUtils.setField(albumServiceImpl, "enrichingStrategy", testEnrichingStrategy);
 
         // Llamar al método enriching() y verificar que devuelve testAlbums
-        assertEquals(enrichedAlbums, albumService.enriching());
+        assertEquals(enrichedAlbums, albumServiceImpl.enriching());
     }
 
 }
