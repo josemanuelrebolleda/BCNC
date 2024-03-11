@@ -84,7 +84,6 @@ public class AlbumServiceImpl implements AlbumService{
     }
     @Override
     public ResponseEntity<String> enrichAlbums() {
-        try {
             ObjectMapper objectMapper = new ObjectMapper();
             try {
                 String jsonResponse = objectMapper.writeValueAsString(enriching());
@@ -94,29 +93,9 @@ public class AlbumServiceImpl implements AlbumService{
             } catch (JsonProcessingException e) {
                 throw new EnrichAlbumsException("Error al convertir a JSON", e);
             }
-
-        } catch (Exception e) {
-            throw new EnrichAlbumsException("Error recuperando datos", e);
-        }
     }
 
     public List<Album> enriching() {
         return enrichingStrategy.enrich();
-    }
-
-    public List<Album> loadAlbums() {
-        AlbumDTO[] albumArray = null;
-        try {
-            albumArray = restTemplate.getForObject(ALBUMS_URL, AlbumDTO[].class);
-        } catch (RestClientException e) {
-            logger.error("Error cargando albums de repositorio", e);
-            throw new AlbumNotFoundException("Error cargando albums de repositorio", e);
-        }
-
-        if (albumArray == null) {
-            throw new AlbumNotFoundException("La API devolvió datos nulos");
-        }
-
-        return albumMapper.mapToAlbums(Arrays.asList(albumArray));
     }
 }
