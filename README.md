@@ -95,7 +95,7 @@ La clase `Tools` se utiliza en las pruebas unitarias e integración de `AlbumSer
 
 #### Tools para AlbumServiceImplIntegrationTest y AlbumServiceImplTest
 
-En `AlbumServiceImplIntegrationTest`, el método `@BeforeEach` llamado `integrationGenerateEnrichedAlbum` utiliza la clase `Tools` para generar una lista de álbumes enriquecidos que se utilizarán en las pruebas de integración. Este método llama a `tools.setup()`, que devuelve una lista de álbumes enriquecidos, y los añade a la lista `enrichedAlbums` que se utilizará en las pruebas.
+En `AlbumServiceImplIntegrationTest`y en `AlbumServiceImplTest`, el método `@BeforeEach` utiliza la clase `Tools` para generar una lista de álbumes enriquecidos que se utilizarán en las pruebas de integración. Este método llama a `tools.setup()`, que devuelve una lista de álbumes enriquecidos, y los añade a la lista `enrichedAlbums` que se utilizará en las pruebas.
 
 #### AlbumServiceImplTest
 
