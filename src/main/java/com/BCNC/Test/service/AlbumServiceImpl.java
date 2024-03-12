@@ -62,6 +62,10 @@ public class AlbumServiceImpl implements AlbumService{
         try {
             List<Album> albums = albumRepository.findAll();
 
+            if (albums.isEmpty()) {
+                return new ResponseEntity<>("No hay álbumes en la base de datos", HttpStatus.NOT_FOUND);
+            }
+
             //Convertimos en JSON para poder responder en String y aclarar el posible error de procesamiento del catch
             String jsonResponse = objectMapper.writeValueAsString(albums);
             HttpHeaders headers = new HttpHeaders();
