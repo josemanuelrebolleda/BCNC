@@ -1,10 +1,10 @@
 # TestBCNC - Proyecto de Prueba para BCNC
 
-Este repositorio contiene un proyecto de prueba para BCNC, una aplicación de microservicios desarrollada en Spring Boot para el Manejo de Álbumes
+Este repositorio contiene un proyecto de prueba para BCNC, una aplicación de microservicios desarrollada en Spring Boot que proporciona tres endpoints para el Manejo de Álbumes
 
 ## Descripción
 
-El proceso permite el enriquecimiento de una base de datos de albums con sus respectivas fotos.
+El proceso permite el enriquecimiento de una base de datos de álbumes con sus respectivas fotos, y dos formas de consulta de los álbumes.
 
 ## Tecnologías Utilizadas
 
@@ -15,7 +15,37 @@ El proceso permite el enriquecimiento de una base de datos de albums con sus res
 - **Lombok (1.18.20)**: Biblioteca del proyecto delombok que reduce el código boilerplate (repetitivo) escribiendo getters, setters, constructores, etc.
 - **Spring Boot Starter Test (3.2.3)**: Proporciona soporte para pruebas unitarias y de integración en aplicaciones Spring Boot.
 - **JUnit Jupiter (5.8.2)**: Framework de pruebas unitarias para Java.
-Este es un microservicio desarrollado en Spring Boot que proporciona tres endpoints para el manejo de álbumes y fotos.
+
+## Requisitos
+
+Para ejecutar el microservicio, necesitarás tener instalado:
+
+- Java Development Kit (JDK) 17 o superior.
+- Maven.
+
+## Instalación del Microservicio
+
+Para ejecutar el microservicio, sigue estos pasos:
+
+1. Clona el repositorio:
+
+```bash
+git clone https://github.com/josemanuelrebolleda/BCNC.git
+```
+
+2. Navega al directorio del proyecto:
+
+```bash
+cd BCNC
+```
+
+3. Compila y ejecuta el microservicio:
+
+```bash
+./mvnw spring-boot:run
+```
+
+4. Accede a los endpoints utilizando herramientas como Postman o un navegador web.
 
 ## Endpoints
 
@@ -27,27 +57,30 @@ Este es un microservicio desarrollado en Spring Boot que proporciona tres endpoi
 - Funcionalidad:
     - Enriquece los álbumes con fotos correspondientes.
     - Guarda los álbumes en la base de datos.
+	- Dispone de salidas informadas de posibles errores
 
  2. Enriquecer y Devolver Álbumes
 
-- Endpoint: `/albums/enrich`
+- Endpoint: `/albums/enrichAlbums`
 - Método HTTP: GET
 - Descripción: Ejecuta un algoritmo para enriquecer datos obtenidos a través de un API y los devuelve en la respuesta.
 - Funcionalidad:
     - Enriquece los álbumes con fotos correspondientes.
     - Devuelve los álbumes enriquecidos en la respuesta.
+	- Dispone de salidas informadas de posibles errores
 
  3. Consulta de Álbumes en la Base de Datos
 
-- Endpoint: `/albums`
+- Endpoint: `/albums/getAlbumsFromDB`
 - Método HTTP: GET
 - Descripción: Obtiene todos los álbumes almacenados en la base de datos H2.
 - Funcionalidad:
     - Devuelve todos los álbumes almacenados en la base de datos H2.
+	- Dispone de salidas informadas de posibles errores
 
 ## Consideraciones
 
-- La eficiencia es una prioridad, por lo que se ha procurado utilizar las estructuras de datos más adecuadas para optimizar el rendimiento.
+- En pro de la eficiencia, he utilizado List (ArrayList)
 - Se ha utilizado Spring Boot para facilitar el desarrollo del microservicio y se han incluido tests unitarios y de integración para todos los endpoints tratando de garantizar la calidad del código.
 - Se han desarrollado los endpoint pensando en un salida de tipo String para poder comunicar incidencias y problemas de ejecución en la salida del REST.
 
@@ -95,38 +128,17 @@ La clase `Tools` se utiliza en las pruebas unitarias e integración de `AlbumSer
 
 #### Tools para AlbumServiceImplIntegrationTest y AlbumServiceImplTest
 
-En `AlbumServiceImplIntegrationTest`y en `AlbumServiceImplTest`, el método `@BeforeEach` utiliza la clase `Tools` para generar una lista de álbumes enriquecidos que se utilizarán en las pruebas de integración. Este método llama a `tools.setup()`, que devuelve una lista de álbumes enriquecidos, y los añade a la lista `enrichedAlbums` que se utilizará en las pruebas.
-
-#### AlbumServiceImplTest
-
-De manera similar, en `AlbumServiceImplTest`, el método `@BeforeEach` llamado `setup` utiliza la clase `Tools` para generar una lista de álbumes enriquecidos que se utilizarán en las pruebas unitarias. Este método también llama a `tools.setup()`, que devuelve una lista de álbumes enriquecidos, y los añade a la lista `enrichedAlbums` que se utilizará en las pruebas.
-
-En resumen, la clase `Tools` juega un papel crucial en la preparación de los datos necesarios para las pruebas en `AlbumServiceImplIntegrationTest` y `AlbumServiceImplTest`.
+En `AlbumServiceImplIntegrationTest`y en `AlbumServiceImplTest`, el método `@BeforeEach` utiliza la clase `Tools` para generar una lista de álbumes de prueba enriquecidos que se utilizarán en las pruebas de integración. Este método llama a `tools.setup()`, que devuelve una lista de álbumes enriquecidos, y los añade a la lista `enrichedAlbums` que se utilizará en las pruebas.
 
 ## Análisis estático de código
 
 Este proyecto está configurado para usar SonarQube, pero no he conseguido conectarlo adecuadamente con mi perfil. Nunca lo había hecho y tras dos días de pelea tuve que renunciar.
 
-## Ejecución del Microservicio
+## Versión
 
-Para ejecutar el microservicio, sigue estos pasos:
+TestBCNC 1.3
 
-1. Clona el repositorio:
+## Autor
 
-```bash
-git clone https://github.com/josemanuelrebolleda/BCNC.git
-```
-
-2. Navega al directorio del proyecto:
-
-```bash
-cd BCNC
-```
-
-3. Compila y ejecuta el microservicio:
-
-```bash
-./mvnw spring-boot:run
-```
-
-4. Accede a los endpoints utilizando herramientas como Postman o un navegador web.
+Jose Manuel Rebolleda Díaz
+josemanuelrebolleda@gmail.com

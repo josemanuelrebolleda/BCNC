@@ -36,14 +36,15 @@ public class EnrichingStrategyImpl implements EnrichingStrategy {
             throw new EnrichingAlbumsException("Error cargando albums de repositorio", e);
         }
 
-        if (!albumsEnriched.isEmpty()) {
+        List<Photo> photos;
+        try {
+            photos = photoServiceImpl.loadPhotos();
+        } catch (Exception e) {
+            throw new EnrichingAlbumsException("Error cargando photos de repositorio", e);
+        }
+
+        if (!albumsEnriched.isEmpty() && !photos.isEmpty()) {
             albumsEnriched.forEach(album -> {
-                List<Photo> photos;
-                try {
-                    photos = photoServiceImpl.loadPhotos();
-                } catch (Exception e) {
-                    throw new EnrichingAlbumsException("Error cargando photos de repositorio", e);
-                }
                 List<Photo> photosWithAlbumId = photos.stream()
                         .filter(photo -> Objects.equals(photo.getAlbumId(), album.getId()))
                         .collect(Collectors.toList());
@@ -55,7 +56,7 @@ public class EnrichingStrategyImpl implements EnrichingStrategy {
     }
 
     public List<Album> loadAlbums() {
-        AlbumDTO[] albumArray = null;
+        AlbumDTO[] albumArray;
         try {
             albumArray = restTemplate.getForObject(ALBUMS_URL, AlbumDTO[].class);
         } catch (RestClientException e) {
