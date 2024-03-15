@@ -20,11 +20,11 @@ import java.util.stream.Collectors;
 @Service
 public class EnrichingStrategyImpl implements EnrichingStrategy {
     @Autowired
-    private PhotoServiceImpl photoServiceImpl;
+    PhotoServiceImpl photoServiceImpl;
     @Autowired
     AlbumMapper albumMapper;
     @Autowired
-    private RestTemplate restTemplate;
+    RestTemplate restTemplate;
     private final String ALBUMS_URL = "https://jsonplaceholder.typicode.com/albums";
 
     @Override
