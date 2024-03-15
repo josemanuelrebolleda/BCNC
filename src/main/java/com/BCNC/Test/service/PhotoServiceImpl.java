@@ -30,7 +30,7 @@ public class PhotoServiceImpl implements PhotoService{
     PhotoMapper photoMapper;
 
     public List<Photo> loadPhotos() {
-        PhotoDTO[] photosArray = null;
+        PhotoDTO[] photosArray;
         try {
             photosArray = restTemplate.getForObject(PHOTOS_URL, PhotoDTO[].class);
         } catch (RestClientException e) {

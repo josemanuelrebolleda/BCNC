@@ -80,7 +80,7 @@ cd BCNC
 
 ## Consideraciones
 
-- En pro de la eficiencia, he utilizado List (ArrayList)
+- En pro de la eficiencia, he utilizado List (ArrayList) que tienen menor carga de proceso para el tipo de carga de datos que realizamos y un orden inherente que facilita el listado ordenado.
 - Se ha utilizado Spring Boot para facilitar el desarrollo del microservicio y se han incluido tests unitarios y de integración para todos los endpoints tratando de garantizar la calidad del código.
 - Se han desarrollado los endpoint pensando en un salida de tipo String para poder comunicar incidencias y problemas de ejecución en la salida del REST.
 
